@@ -1,0 +1,37 @@
+.page-content {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.page-content h2 {
+  color: #1565c0;
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.page-content p {
+  color: #666;
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+.hero-section {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.hero-image {
+  width: 100%;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+@media (max-width: 768px) {
+  .page-content h2 {
+    font-size: 1.8rem;
+  }
+  
+  .page-content p {
+    font-size: 1rem;
+  }
+}

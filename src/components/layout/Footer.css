@@ -1,0 +1,118 @@
+.main-footer {
+  background-color: #ffffff;
+  color: #666;
+  padding: 3rem 2rem 2rem;
+  border-top: 1px solid #f0f0f0;
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.footer-left {
+  flex: 1.5;
+}
+
+.publisher-logo-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.nxb-logo-placeholder {
+  width: 60px;
+  height: 60px;
+  background-color: #d32f2f;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  border-radius: 50%;
+  font-size: 0.8rem;
+}
+
+.nxb-text-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.nxb-name {
+  font-weight: 700;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.nxb-subname {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.footer-middle {
+  flex: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.footer-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0.5rem;
+}
+
+.brand-name {
+  font-weight: 700;
+  color: #1565c0;
+  font-size: 1.1rem;
+}
+
+.mini-logo {
+  display: flex;
+  gap: 2px;
+}
+
+.mini-logo .shape {
+  width: 10px;
+  height: 10px;
+}
+
+.copyright-text {
+  font-size: 0.8rem;
+  color: #999;
+  margin: 0;
+}
+
+@media (max-width: 992px) {
+  .footer-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .footer-right {
+    align-items: flex-start;
+    text-align: left;
+  }
+}

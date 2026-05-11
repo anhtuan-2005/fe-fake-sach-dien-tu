@@ -1,0 +1,43 @@
+.features {
+  padding: 4rem 2rem;
+  background-color: #f8fbff;
+}
+
+.features-section-title {
+  text-align: center;
+  color: #1e88e5;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 4rem;
+}
+
+.features-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.antd-feature-card {
+  height: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  text-align: center;
+}
+
+.icon-wrapper-antd {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feature-desc-text {
+  color: #666;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.feature-btn-group {
+  width: 100%;
+  justify-content: center;
+}
