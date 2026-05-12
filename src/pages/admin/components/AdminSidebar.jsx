@@ -1,6 +1,8 @@
 import React from 'react';
 import { Layout, Menu, Typography, App } from 'antd';
 import { useNavigate } from 'react-router-dom';
+import api from '../../../api';
+import useAuthStore from '../../../store/useAuthStore';
 import {
   HomeOutlined,
   BellOutlined,
@@ -27,8 +29,18 @@ const { Text } = Typography;
 const AdminSidebar = ({ collapsed, setCollapsed }) => {
   const navigate = useNavigate();
   const { message } = App.useApp();
+  const logout = useAuthStore((state) => state.logout);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      // Gọi API logout để xóa cookie refreshToken ở backend
+      await api.post('/auth/logout');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+    
+    logout();
+    // Xóa thêm localStorage cũ để dọn dẹp (nếu còn)
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     message.success('Đăng xuất thành công');

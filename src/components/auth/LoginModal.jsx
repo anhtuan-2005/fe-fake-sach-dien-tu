@@ -3,6 +3,7 @@ import { Modal, Form, Input, Button, Typography, Space, App } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { CloseOutlined, EyeInvisibleOutlined, EyeTwoTone, PlayCircleFilled } from '@ant-design/icons';
 import api from '../../api';
+import useAuthStore from '../../store/useAuthStore';
 import './LoginModal.css';
 
 const { Title, Text } = Typography;
@@ -11,6 +12,7 @@ const LoginModal = ({ visible, onCancel }) => {
   const [loading, setLoading] = useState(false);
   const { message } = App.useApp();
   const navigate = useNavigate();
+  const setAuth = useAuthStore((state) => state.setAuth);
 
   const onFinish = async (values) => {
     setLoading(true);
@@ -23,9 +25,9 @@ const LoginModal = ({ visible, onCancel }) => {
 
       if (response.data.success) {
         message.success('Đăng nhập thành công!');
-        // Lưu thông tin người dùng và token vào localStorage
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        // Cập nhật Zustand Store (Persist sẽ tự lưu accessToken vào localStorage)
+        // Refresh Token được backend trả về qua HttpOnly Cookie
+        setAuth(response.data.user, response.data.accessToken);
         
         // Đóng modal
         onCancel();

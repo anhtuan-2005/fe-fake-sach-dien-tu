@@ -7,7 +7,7 @@ const Hero = () => {
       <div className="hero-container">
         <div className="hero-image-wrapper">
           <img 
-            src="https://img.freepik.com/free-vector/kids-reading-books-illustration_23-2148842100.jpg" 
+            src="https://img.freepik.com/free-vector/kids-reading-concept-illustration_114360-8457.jpg" 
             alt="Children learning" 
             className="main-hero-image" 
           />
