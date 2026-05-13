@@ -4,7 +4,7 @@ import { HomeOutlined, BellOutlined, UserOutlined } from '@ant-design/icons';
 
 const { Header } = Layout;
 
-const AdminHeader = () => {
+const AdminHeader: React.FC = () => {
   return (
     <Header className="bg-transparent px-6 flex items-center justify-between h-16">
       <Breadcrumb

@@ -1,7 +1,15 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { User } from '../types';
 
-const useAuthStore = create(
+interface AuthState {
+  user: User | null;
+  token: string | null;
+  setAuth: (user: User | null, token: string | null) => void;
+  logout: () => void;
+}
+
+const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
@@ -13,10 +21,6 @@ const useAuthStore = create(
       // Hành động đăng xuất
       logout: () => {
         set({ user: null, token: null });
-        // Xóa thêm token khỏi localStorage nếu cần thiết, 
-        // nhưng persist đã quản lý việc này cho store.
-        // Tuy nhiên dự án cũ dùng key 'token' và 'user' riêng biệt,
-        // ta có thể xóa chúng để tránh xung đột nếu cần.
       },
     }),
     {

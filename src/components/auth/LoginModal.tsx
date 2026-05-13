@@ -4,44 +4,54 @@ import { useNavigate } from 'react-router-dom';
 import { CloseOutlined, EyeInvisibleOutlined, EyeTwoTone, PlayCircleFilled } from '@ant-design/icons';
 import api from '../../api';
 import useAuthStore from '../../store/useAuthStore';
+import { ApiResponse, LoginDto, LoginResponse } from '../../types';
 import './LoginModal.css';
 
 const { Title, Text } = Typography;
 
-const LoginModal = ({ visible, onCancel }) => {
-  const [loading, setLoading] = useState(false);
+interface LoginModalProps {
+  visible: boolean;
+  onCancel: () => void;
+}
+
+const LoginModal: React.FC<LoginModalProps> = ({ visible, onCancel }) => {
+  const [loading, setLoading] = useState<boolean>(false);
   const { message } = App.useApp();
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
 
-  const onFinish = async (values) => {
+  const onFinish = async (values: LoginDto) => {
     setLoading(true);
-    console.log('Đang gọi API tại:', api.defaults.baseURL + '/auth/login');
     try {
-      const response = await api.post('/auth/login', {
+      const response = await api.post<ApiResponse<LoginResponse>>('/auth/login', {
         email: values.email,
         password: values.password
       });
 
       if (response.data.success) {
         message.success('Đăng nhập thành công!');
-        // Cập nhật Zustand Store (Persist sẽ tự lưu accessToken vào localStorage)
-        // Refresh Token được backend trả về qua HttpOnly Cookie
-        setAuth(response.data.user, response.data.accessToken);
         
-        // Đóng modal
-        onCancel();
+        // Trích xuất dữ liệu từ cấu trúc ApiResponse chuẩn: { success, data: { user, accessToken } }
+        const { user, accessToken } = response.data.data || {};
         
-        // Điều hướng thông minh theo role
-        setTimeout(() => {
-          if (response.data.user.role === 'admin') {
-            navigate('/admin', { replace: true });
-          } else {
-            navigate('/', { replace: true });
-          }
-        }, 500);
+        if (user && accessToken) {
+          // Cập nhật Zustand Store
+          setAuth(user, accessToken);
+          
+          // Đóng modal
+          onCancel();
+          
+          // Điều hướng thông minh theo role sử dụng Optional Chaining để phòng thủ
+          setTimeout(() => {
+            if (user.role === 'admin') {
+              navigate('/admin', { replace: true });
+            } else {
+              navigate('/', { replace: true });
+            }
+          }, 500);
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
       
       if (!error.response) {

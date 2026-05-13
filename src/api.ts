@@ -1,7 +1,8 @@
-import axios from 'axios';
+import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import useAuthStore from './store/useAuthStore';
+import { ApiResponse } from './types';
 
-const api = axios.create({
+const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
   headers: {
     'Content-Type': 'application/json'
@@ -11,9 +12,9 @@ const api = axios.create({
 
 // Axios Request Interceptor: Tự động đính kèm token vào header
 api.interceptors.request.use(
-  (config) => {
+  (config: InternalAxiosRequestConfig) => {
     const token = useAuthStore.getState().token;
-    if (token) {
+    if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -25,9 +26,9 @@ api.interceptors.request.use(
 
 // Biến để tránh gọi refresh token nhiều lần cùng lúc
 let isRefreshing = false;
-let failedQueue = [];
+let failedQueue: any[] = [];
 
-const processQueue = (error, token = null) => {
+const processQueue = (error: any, token: string | null = null) => {
   failedQueue.forEach(prom => {
     if (error) {
       prom.reject(error);
@@ -40,7 +41,7 @@ const processQueue = (error, token = null) => {
 
 // Axios Response Interceptor: Xử lý lỗi token hết hạn (401)
 api.interceptors.response.use(
-  (response) => response,
+  (response: AxiosResponse) => response,
   async (error) => {
     const originalRequest = error.config;
 
@@ -50,10 +51,14 @@ api.interceptors.response.use(
         // Nếu đang refresh rồi thì đẩy request vào hàng đợi
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
-        }).then(token => {
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return api(originalRequest);
-        }).catch(err => Promise.reject(err));
+        })
+          .then((token) => {
+            if (originalRequest.headers) {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+            }
+            return api(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
       }
 
       originalRequest._retry = true;
@@ -61,13 +66,18 @@ api.interceptors.response.use(
 
       try {
         // Gọi API refresh token
-        const response = await axios.post(
+        const response = await axios.post<ApiResponse<{ accessToken: string }>>(
           `${api.defaults.baseURL}/auth/refresh-token`,
           {},
           { withCredentials: true }
         );
 
-        const { accessToken } = response.data;
+        // Trích xuất accessToken từ response.data.data theo chuẩn ApiResponse mới
+        const { accessToken } = response.data.data || {};
+        
+        if (!accessToken) {
+          throw new Error('Refresh token failed - No access token received');
+        }
         
         // Cập nhật Zustand Store
         useAuthStore.getState().setAuth(useAuthStore.getState().user, accessToken);
@@ -76,7 +86,9 @@ api.interceptors.response.use(
         processQueue(null, accessToken);
         
         // Thực hiện lại request ban đầu với token mới
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        if (originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        }
         return api(originalRequest);
       } catch (refreshError) {
         // Nếu refresh cũng lỗi (ví dụ Refresh Token hết hạn)

@@ -2,7 +2,12 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 
-const ProtectedRoute = ({ children, allowedRoles = [] }) => {
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  allowedRoles?: string[];
+}
+
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles = [] }) => {
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
 
@@ -14,7 +19,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     return <Navigate to="/" replace />;
   }
 
-  return children;
+  return <>{children}</>;
 };
 
 export default ProtectedRoute;

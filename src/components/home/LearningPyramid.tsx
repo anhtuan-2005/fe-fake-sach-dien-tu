@@ -2,8 +2,14 @@ import React from 'react';
 import { Check } from 'lucide-react';
 import './LearningPyramid.css';
 
-const LearningPyramid = () => {
-  const pyramidData = [
+interface PyramidItem {
+  percent: string;
+  text: string;
+  color: string;
+}
+
+const LearningPyramid: React.FC = () => {
+  const pyramidData: PyramidItem[] = [
     { percent: '5%', text: 'Là mức độ ghi nhớ khi bạn Được nghe giảng', color: '#1565c0' },
     { percent: '10%', text: 'Là mức độ ghi nhớ khi bạn Đọc', color: '#1976d2' },
     { percent: '20%', text: 'Là mức độ ghi nhớ khi bạn Xem video', color: '#0288d1' },
