@@ -2,7 +2,7 @@ import React from 'react';
 import { Form, Select, Input, Button, Row, Col } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 
-const UserFilter = () => {
+const UserFilter: React.FC = () => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
       <Form layout="vertical">

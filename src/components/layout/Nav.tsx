@@ -3,10 +3,10 @@ import { NavLink } from 'react-router-dom';
 import LoginModal from '../auth/LoginModal';
 import './Nav.css';
 
-const Nav = () => {
-  const [isLoginVisible, setIsLoginVisible] = useState(false);
+const Nav: React.FC = () => {
+  const [isLoginVisible, setIsLoginVisible] = useState<boolean>(false);
 
-  const showLoginModal = (e) => {
+  const showLoginModal = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     setIsLoginVisible(true);
   };

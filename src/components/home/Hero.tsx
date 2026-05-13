@@ -1,7 +1,7 @@
 import React from 'react';
 import './Hero.css';
 
-const Hero = () => {
+const Hero: React.FC = () => {
   return (
     <section className="hero">
       <div className="hero-container">

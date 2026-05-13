@@ -1,7 +1,11 @@
 import React from 'react';
 import './Content.css';
 
-const Content = ({ children }) => {
+interface ContentProps {
+  children: React.ReactNode;
+}
+
+const Content: React.FC<ContentProps> = ({ children }) => {
   return (
     <main className="main-content">
       <div className="content-wrapper">

@@ -4,7 +4,11 @@ import Footer from './Footer';
 import Content from './Content';
 import './MainLayout.css';
 
-const MainLayout = ({ children }) => {
+interface MainLayoutProps {
+  children: React.ReactNode;
+}
+
+const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
     <div className="layout-wrapper">
       <Header />

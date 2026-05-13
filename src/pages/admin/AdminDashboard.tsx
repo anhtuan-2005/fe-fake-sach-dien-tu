@@ -9,8 +9,8 @@ import UserTable from './components/UserTable';
 const { Content } = Layout;
 const { Title } = Typography;
 
-const AdminDashboard = () => {
-  const [collapsed, setCollapsed] = useState(false);
+const AdminDashboard: React.FC = () => {
+  const [collapsed, setCollapsed] = useState<boolean>(false);
 
   return (
     <Layout className="min-h-screen bg-[#e6f7ff]">

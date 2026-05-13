@@ -26,7 +26,12 @@ import {
 const { Sider } = Layout;
 const { Text } = Typography;
 
-const AdminSidebar = ({ collapsed, setCollapsed }) => {
+interface AdminSidebarProps {
+  collapsed: boolean;
+  setCollapsed: (collapsed: boolean) => void;
+}
+
+const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, setCollapsed }) => {
   const navigate = useNavigate();
   const { message } = App.useApp();
   const logout = useAuthStore((state) => state.logout);
@@ -47,7 +52,7 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
     navigate('/');
   };
 
-  const menuItems = [
+  const menuItems: any[] = [
     { key: 'home', icon: <HomeOutlined />, label: 'Trang chủ' },
     { key: 'notif', icon: <BellOutlined />, label: 'Thông báo' },
     { key: 'offline', icon: <BookOutlined />, label: 'Sách điện tử (offline)' },
@@ -104,7 +109,7 @@ const AdminSidebar = ({ collapsed, setCollapsed }) => {
           className="cursor-pointer text-gray-400 hover:text-blue-600 transition-colors"
           onClick={() => setCollapsed(!collapsed)}
         >
-          {collapsed ? <MenuUnfoldOutlined size={20} /> : <MenuFoldOutlined size={20} />}
+          {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
         </div>
       </div>
       <Menu

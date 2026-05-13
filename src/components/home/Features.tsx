@@ -1,10 +1,18 @@
 import React from 'react';
 import { Card, Button, Row, Col, Space } from 'antd';
-import { Cpu, Users, ShieldCheck } from 'lucide-react';
+import { Cpu, Users, ShieldCheck, LucideIcon } from 'lucide-react';
 import './Features.css';
 
-const Features = () => {
-  const features = [
+interface FeatureItem {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  buttons: string[];
+  color: string;
+}
+
+const Features: React.FC = () => {
+  const features: FeatureItem[] = [
     {
       icon: Cpu,
       title: "CHẤM ĐIỂM AI TỰ ĐỘNG",
