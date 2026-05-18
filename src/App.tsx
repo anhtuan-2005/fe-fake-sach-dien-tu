@@ -5,6 +5,8 @@ import Hero from './components/home/Hero';
 import Features from './components/home/Features';
 import LearningPyramid from './components/home/LearningPyramid';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminLayout from './pages/admin/AdminLayout';
+import ActivityLogs from './pages/admin/ActivityLogs';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import './App.css';
 
@@ -51,10 +53,14 @@ const App: React.FC = () => {
           path="/admin"
           element={
             <ProtectedRoute allowedRoles={['admin']}>
-              <AdminDashboard />
+              <AdminLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<AdminDashboard />} />
+          <Route path="users" element={<AdminDashboard />} />
+          <Route path="logs" element={<ActivityLogs />} />
+        </Route>
 
         <Route element={<ClientLayout />}>
           <Route path="/" element={<Home />} />

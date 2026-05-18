@@ -17,6 +17,7 @@ export interface User {
   status: number; // tinyint(1) trong SQL trả về number (0 hoặc 1)
   role: string;
   created_at: string; // Ở Frontend thường là string ISO
+  deleted_at: string | null;
 }
 
 /**
@@ -70,12 +71,27 @@ export interface School {
 /**
  * Interface cho Nhật ký hoạt động
  */
-export interface ActionLog {
+export interface ActivityLog {
   id: number;
   user_id: number | null;
-  action: string;
-  device: string | null;
+  user_email: string | null;
+  action: 'CREATE' | 'READ' | 'UPDATE' | 'DELETE';
+  target_user_id: number | null;
+  description: string;
+  old_values: string | null; // DB trả về string JSON
+  new_values: string | null;
+  ip_address: string | null;
   created_at: string;
+}
+
+/**
+ * Interface cho phân trang log
+ */
+export interface PaginationData {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
 }
 
 /**
@@ -86,6 +102,20 @@ export interface ApiResponse<T = any> {
   message?: string;
   data?: T;
   error?: string;
+  pagination?: PaginationData;
+}
+
+/**
+ * Interface cho bộ lọc người dùng
+ */
+export interface UserFilterState {
+  role?: string;
+  level?: string;
+  province?: number | string;
+  district?: number | string;
+  school?: string;
+  phone?: string;
+  email?: string;
 }
 
 /**
