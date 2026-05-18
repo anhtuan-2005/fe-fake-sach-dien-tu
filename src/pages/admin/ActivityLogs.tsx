@@ -314,7 +314,7 @@ const ActivityLogs: React.FC = () => {
             pageSize: 5,
             onChange: (page) => fetchLogs(page),
             showTotal: (total) => `Tổng cộng ${total} bản ghi`,
-            placement: 'bottomRight',
+            align: 'end',
             className: "p-4"
           }}
         />
