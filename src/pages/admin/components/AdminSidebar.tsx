@@ -20,7 +20,8 @@ import {
   BarChartOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  LogoutOutlined
+  LogoutOutlined,
+  HistoryOutlined
 } from '@ant-design/icons';
 
 const { Sider } = Layout;
@@ -53,7 +54,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, setCollapsed }) 
   };
 
   const menuItems: any[] = [
-    { key: 'home', icon: <HomeOutlined />, label: 'Trang chủ' },
+    { key: '/admin', icon: <HomeOutlined />, label: 'Trang chủ', onClick: () => navigate('/admin') },
     { key: 'notif', icon: <BellOutlined />, label: 'Thông báo' },
     { key: 'offline', icon: <BookOutlined />, label: 'Sách điện tử (offline)' },
     { key: 'elearning', icon: <ReadOutlined />, label: 'Bài giảng E-learning' },
@@ -69,7 +70,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, setCollapsed }) 
       children: [
         { key: 'library', icon: <BankOutlined />, label: 'Thư viện' },
         { key: 'class-mgmt', icon: <FolderOpenOutlined />, label: 'Quản lý lớp học' },
-        { key: 'user-mgmt', icon: <TeamOutlined />, label: 'Quản lý người dùng' },
+        { key: '/admin/users', icon: <TeamOutlined />, label: 'Quản lý người dùng', onClick: () => navigate('/admin/users') },
+        { key: '/admin/logs', icon: <HistoryOutlined />, label: 'Nhật ký hoạt động', onClick: () => navigate('/admin/logs') },
         { key: 'q-bank', icon: <DatabaseOutlined />, label: 'Ngân hàng câu hỏi' },
         { key: 'type-opt', icon: <SettingOutlined />, label: 'Type & OptionType' },
         { key: 'mail-tmpl', icon: <MailOutlined />, label: 'Quản lý mẫu mail' },
@@ -93,6 +95,15 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, setCollapsed }) 
       theme="light"
       width={260}
       className="border-r border-gray-100 shadow-sm"
+      style={{
+        overflow: 'auto',
+        height: '100vh',
+        position: 'fixed',
+        left: 0,
+        top: 0,
+        bottom: 0,
+        zIndex: 1000
+      }}
     >
       <div className="flex items-center justify-between p-4 h-16 border-b border-gray-50">
         {!collapsed && (
@@ -114,7 +125,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, setCollapsed }) 
       </div>
       <Menu
         mode="inline"
-        defaultSelectedKeys={['user-mgmt']}
+        defaultSelectedKeys={[window.location.pathname]}
         items={menuItems}
         className="admin-sidebar-menu h-[calc(100vh-64px)] overflow-y-auto border-none"
       />
