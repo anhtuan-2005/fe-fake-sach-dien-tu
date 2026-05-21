@@ -25,7 +25,8 @@ const FIELD_LABELS: Record<string, string> = {
   province_id: 'ID Tỉnh',
   ward_id: 'ID Phường/Xã',
   school_id: 'ID Trường',
-  role: 'Quyền (Role)'
+  role: 'Quyền (Role)',
+  avatar_url: 'Ảnh đại diện'
 };
 
 interface DiffItem {

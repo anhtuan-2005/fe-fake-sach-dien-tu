@@ -1,228 +1,273 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Table, Tag, Space, Button, Tooltip, App, Modal, Popconfirm } from 'antd';
-import type { TableProps } from 'antd';
-import {
-  UserOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  PhoneOutlined,
-  ReloadOutlined,
-  UndoOutlined
-} from '@ant-design/icons';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Table, Button, Space, Tooltip, Popconfirm, App, Tag, Typography } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
+import { EditOutlined, DeleteOutlined, UserAddOutlined, ReloadOutlined } from '@ant-design/icons';
 import api from '../../../api';
-import { ApiResponse, User, UserFilterState } from '../../../types';
-import useAuthStore from '../../../store/useAuthStore';
+import { User, UserFilterState, ApiResponse } from '../../../types';
+import UserFilter from './UserFilter';
+import UserModal from './UserModal';
 
-/**
- * Interface mở rộng từ User để phù hợp với hiển thị Table
- */
-interface UserDataType extends User {
-  key: number;
-}
+const { Title } = Typography;
 
-interface UserTableProps {
-  filters: UserFilterState;
-  showDeleted?: boolean;
-  onEdit?: (user: User) => void;
-}
-
-const UserTable: React.FC<UserTableProps> = ({ filters, showDeleted = false, onEdit }) => {
-  const [users, setUsers] = useState<UserDataType[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [totalItems, setTotalItems] = useState<number>(0);
-  const [currentPage, setCurrentPage] = useState<number>(1);
+const UserTable: React.FC = () => {
   const { message } = App.useApp();
-  const currentUser = useAuthStore((state) => state.user);
+  
+  // States
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [page, setPage] = useState<number>(1);
+  const [totalItems, setTotalItems] = useState<number>(0);
+  const [filters, setFilters] = useState<UserFilterState>({
+    role: 'all',
+    level: 'all',
+    province: 'all',
+    district: 'all',
+    school: '',
+    phone: '',
+    email: ''
+  });
 
-  const fetchUsers = useCallback(async (page: number = 1) => {
+  // Modal states
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+
+  // Fetch users from API
+  const fetchUsers = useCallback(async (currentPage: number, currentFilters: UserFilterState) => {
     setLoading(true);
     try {
       const response = await api.get<ApiResponse<User[]>>('/admin/users', {
-        params: { ...filters, showDeleted, page, limit: 10 }
+        params: {
+          ...currentFilters,
+          page: currentPage,
+          limit: 10
+        }
       });
-      if (response.data.success && response.data.data) {
-        const formattedData: UserDataType[] = response.data.data.map((user) => ({
-          ...user,
-          key: user.id,
-        }));
-        setUsers(formattedData);
+      
+      if (response.data.success) {
+        setUsers(response.data.data || []);
         if (response.data.pagination) {
           setTotalItems(response.data.pagination.totalItems);
-          setCurrentPage(response.data.pagination.currentPage);
         }
       }
     } catch (error: any) {
-      console.error('>>> UserTable Error:', error);
-      const serverMessage = error.response?.data?.message || error.response?.data?.error;
-      message.error(serverMessage ? `Lỗi từ Server: ${serverMessage}` : 'Không thể kết nối với máy chủ hoặc lỗi mạng');
+      message.error(error.response?.data?.message || 'Không thể tải danh sách người dùng');
     } finally {
       setLoading(false);
     }
-  }, [message, filters, showDeleted]);
+  }, [message]);
 
   useEffect(() => {
-    fetchUsers(1);
-  }, [JSON.stringify(filters), showDeleted]);
+    fetchUsers(page, filters);
+  }, [page, filters, fetchUsers]);
 
-  const handleSoftDelete = async (id: number, email: string) => {
-    if (currentUser && currentUser.id === id) {
-      message.warning('Bạn không thể tự xóa tài khoản của chính mình');
-      return;
-    }
+  // Handlers
+  const handleSearch = (newFilters: UserFilterState) => {
+    setFilters(newFilters);
+    setPage(1);
+  };
 
-    if (email === 'testitdn@gmail.com') {
-      message.error('Không thể xóa tài khoản Admin tối cao của hệ thống!');
-      return;
-    }
+  const handleReset = () => {
+    const defaultFilters: UserFilterState = {
+      role: 'all',
+      level: 'all',
+      province: 'all',
+      district: 'all',
+      school: '',
+      phone: '',
+      email: ''
+    };
+    setFilters(defaultFilters);
+    setPage(1);
+  };
 
+  const handleDelete = async (id: number) => {
     try {
       await api.delete(`/admin/users/${id}`);
-      message.success('Đã chuyển người dùng vào thùng rác');
-      fetchUsers(currentPage);
+      message.success('Xóa người dùng thành công');
+      fetchUsers(page, filters);
     } catch (error: any) {
       message.error(error.response?.data?.message || 'Lỗi khi xóa người dùng');
     }
   };
 
-  const handleRestore = async (id: number) => {
-    try {
-      await api.post(`/admin/users/${id}/restore`);
-      message.success('Khôi phục người dùng thành công');
-      fetchUsers(1);
-    } catch (error: any) {
-      message.error(error.response?.data?.message || 'Lỗi khi khôi phục');
-    }
+  const handleOpenAddModal = () => {
+    setEditingUser(null);
+    setIsModalOpen(true);
   };
 
-  const columns = useMemo<TableProps<UserDataType>['columns']>(() => [
+  const handleOpenEditModal = (user: User) => {
+    setEditingUser(user);
+    setIsModalOpen(true);
+  };
+
+  const handleModalSuccess = () => {
+    setIsModalOpen(false);
+    fetchUsers(page, filters);
+  };
+
+  // Columns definition
+  const columns: ColumnsType<User> = useMemo(() => [
     {
-      title: 'Mã',
+      title: 'Mã người dùng',
       dataIndex: 'user_code',
       key: 'user_code',
-      width: 100,
-      render: (text: string | null) => <span className="font-medium text-blue-600">{text || 'N/A'}</span>
+      width: 120,
+      render: (text) => <span className="font-medium text-blue-600">{text || 'N/A'}</span>
     },
     {
       title: 'Họ và tên',
       dataIndex: 'full_name',
       key: 'full_name',
-      render: (text: string) => (
-        <Space>
-          <UserOutlined className="text-gray-400" />
-          <span className="font-semibold text-gray-700">{text}</span>
-        </Space>
-      ),
-    },
-    {
-      title: 'Loại tài khoản',
-      dataIndex: 'account_type',
-      key: 'account_type',
-      render: (type: string | null) => {
-        const color = type?.toLowerCase() === 'admin' ? 'red' : (type === 'Giáo viên' ? 'orange' : 'blue');
-        return <Tag color={color} className="rounded-md px-3">{type || 'N/A'}</Tag>;
-      },
-    },
-    {
-      title: 'Cấp',
-      dataIndex: 'level',
-      key: 'level',
-      render: (level: string | null) => <Tag className="border-blue-200 text-blue-600 bg-blue-50">{level || 'N/A'}</Tag>,
+      width: 200,
+      render: (text) => <span className="font-bold text-gray-700">{text}</span>
     },
     {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
-      render: (email: string) => <span className="text-blue-500 underline text-xs">{email}</span>
+      width: 220,
+      render: (text) => <span className="text-gray-600">{text}</span>
+    },
+    {
+      title: 'Loại tài khoản',
+      dataIndex: 'account_type',
+      key: 'account_type',
+      width: 140,
+      render: (type) => {
+        let color = 'blue';
+        if (type === 'Admin') color = 'red';
+        if (type === 'Giáo viên') color = 'orange';
+        return <Tag color={color} className="px-3 py-0.5 rounded-full font-medium">{type}</Tag>;
+      }
+    },
+    {
+      title: 'Cấp',
+      dataIndex: 'level',
+      key: 'level',
+      width: 100,
+      render: (level) => <Tag color="cyan" className="rounded-md">{level || 'N/A'}</Tag>
     },
     {
       title: 'Điện thoại',
       dataIndex: 'phone',
       key: 'phone',
-      render: (phone: string | null) => phone ? (
-        <Space className="text-gray-500 text-xs">
-          <PhoneOutlined />
-          <span>{phone}</span>
-        </Space>
-      ) : <span className="text-gray-300 italic text-xs">Chưa cập nhật</span>
+      width: 130,
+      render: (text) => <span className="text-gray-500">{text || 'N/A'}</span>
     },
     {
       title: 'Thao tác',
       key: 'action',
-      width: 120,
       fixed: 'right',
-      render: (_, record: UserDataType) => (
-        <Space size="small">
-          {!showDeleted ? (
-            <>
+      width: 120,
+      render: (_, record) => {
+        const isAdminTốiCao = record.email === 'testitdn@gmail.com';
+        const isAdmin = record.account_type === 'Admin';
+        
+        return (
+          <Space size="middle">
+            {!isAdmin && (
               <Tooltip title="Chỉnh sửa">
-                <Button
-                  type="text"
-                  icon={<EditOutlined className="text-blue-500" />}
-                  onClick={() => onEdit?.(record)}
+                <Button 
+                  type="text" 
+                  icon={<EditOutlined className="text-blue-500 text-lg" />} 
+                  onClick={() => handleOpenEditModal(record)}
+                  className="hover:bg-blue-50 rounded-full"
                 />
               </Tooltip>
+            )}
+            
+            {!isAdminTốiCao && !isAdmin && (
               <Popconfirm
                 title="Xóa người dùng"
-                description="Bạn có chắc chắn muốn chuyển người dùng này vào thùng rác?"
-                onConfirm={() => handleSoftDelete(record.id, record.email)}
+                description="Bạn có chắc chắn muốn xóa người dùng này?"
+                onConfirm={() => handleDelete(record.id)}
                 okText="Xóa"
                 cancelText="Hủy"
                 okButtonProps={{ danger: true }}
-                disabled={record.email === 'testitdn@gmail.com'}
               >
-                <Tooltip title={record.email === 'testitdn@gmail.com' ? 'Admin hệ thống' : 'Xóa'}>
-                  <Button
-                    type="text"
-                    icon={<DeleteOutlined className={record.email === 'testitdn@gmail.com' ? 'text-gray-300' : 'text-red-500'} />}
-                    disabled={record.email === 'testitdn@gmail.com'}
+                <Tooltip title="Xóa">
+                  <Button 
+                    type="text" 
+                    icon={<DeleteOutlined className="text-red-500 text-lg" />} 
+                    className="hover:bg-red-50 rounded-full"
                   />
                 </Tooltip>
               </Popconfirm>
-            </>
-          ) : (
-            <Tooltip title="Khôi phục">
-              <Button
-                type="text"
-                icon={<UndoOutlined className="text-green-500" />}
-                onClick={() => handleRestore(record.id)}
-              />
-            </Tooltip>
-          )}
-        </Space>
-      ),
+            )}
+          </Space>
+        );
+      },
     },
-  ], [showDeleted, onEdit, currentUser]);
+  ], [page, filters]);
 
   return (
-    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-bold text-gray-800">Danh sách người dùng</h3>
-        <Button
-          icon={<ReloadOutlined />}
-          onClick={() => fetchUsers(currentPage)}
-          loading={loading}
-          ghost
-          type="primary"
-        >
-          Làm mới
-        </Button>
+    <div className="p-2 sm:p-4 md:p-6 bg-gray-50 min-h-screen">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+        <div className="w-full sm:w-auto overflow-hidden">
+          <Title 
+            level={3} 
+            className="!m-0 text-gray-800 break-words whitespace-normal"
+            style={{ fontSize: 'clamp(1.25rem, 4vw, 1.875rem)' }}
+          >
+            Quản lý người dùng
+          </Title>
+          <p className="text-gray-500 text-xs sm:text-sm mt-1">Danh sách tất cả người dùng trong hệ thống</p>
+        </div>
+        <Space size="small" className="w-full sm:w-auto flex-wrap">
+          <Button 
+            icon={<ReloadOutlined />} 
+            onClick={() => fetchUsers(page, filters)}
+            loading={loading}
+            className="flex-1 sm:flex-none h-10 rounded-lg font-medium text-xs sm:text-sm"
+          >
+            Làm mới
+          </Button>
+          <Button 
+            type="primary" 
+            icon={<UserAddOutlined />} 
+            onClick={handleOpenAddModal}
+            className="flex-1 sm:flex-none h-10 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold shadow-md text-xs sm:text-sm"
+          >
+            Thêm người dùng
+          </Button>
+        </Space>
       </div>
-      <Table<UserDataType>
-        columns={columns}
-        dataSource={users}
-        loading={loading}
-        rowKey="id"
-        pagination={{
-          current: currentPage,
-          total: totalItems,
-          pageSize: 10,
-          onChange: (page) => fetchUsers(page),
-          align: 'end',
-          showSizeChanger: false,
-          showTotal: (total) => `Tổng cộng ${total} người dùng`
-        }}
-        scroll={{ x: 800 }}
-        className="custom-table"
+
+      {/* Filter Component */}
+      <UserFilter 
+        filters={filters}
+        onSearch={handleSearch}
+        onReset={handleReset}
+      />
+
+      {/* Table Component */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <Table
+          columns={columns}
+          dataSource={users}
+          rowKey="id"
+          loading={loading}
+          pagination={{
+            current: page,
+            pageSize: 10,
+            total: totalItems,
+            onChange: (p) => setPage(p),
+            showSizeChanger: false,
+            align: 'end',
+            className: "p-4 border-t border-gray-50"
+          }}
+          scroll={{ x: 'max-content' }}
+          className="custom-ant-table"
+        />
+      </div>
+
+      {/* Modal Component */}
+      <UserModal
+        open={isModalOpen}
+        onCancel={() => setIsModalOpen(false)}
+        onSuccess={handleModalSuccess}
+        editingUser={editingUser}
       />
     </div>
   );

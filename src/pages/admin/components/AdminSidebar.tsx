@@ -1,11 +1,12 @@
 import React from 'react';
 import { Layout, Menu, Typography, App } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../../../api';
 import useAuthStore from '../../../store/useAuthStore';
 import {
   HomeOutlined,
   BellOutlined,
+  UserOutlined,
   BookOutlined,
   ReadOutlined,
   ToolOutlined,
@@ -20,7 +21,6 @@ import {
   BarChartOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  LogoutOutlined,
   HistoryOutlined
 } from '@ant-design/icons';
 
@@ -34,27 +34,13 @@ interface AdminSidebarProps {
 
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, setCollapsed }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { message } = App.useApp();
   const logout = useAuthStore((state) => state.logout);
 
-  const handleLogout = async () => {
-    try {
-      // Gọi API logout để xóa cookie refreshToken ở backend
-      await api.post('/auth/logout');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-    
-    logout();
-    // Xóa thêm localStorage cũ để dọn dẹp (nếu còn)
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    message.success('Đăng xuất thành công');
-    navigate('/');
-  };
-
   const menuItems: any[] = [
     { key: '/admin', icon: <HomeOutlined />, label: 'Trang chủ', onClick: () => navigate('/admin') },
+    { key: '/admin/profile', icon: <UserOutlined />, label: 'Thông tin cá nhân', onClick: () => navigate('/admin/profile') },
     { key: 'notif', icon: <BellOutlined />, label: 'Thông báo' },
     { key: 'offline', icon: <BookOutlined />, label: 'Sách điện tử (offline)' },
     { key: 'elearning', icon: <ReadOutlined />, label: 'Bài giảng E-learning' },
@@ -78,13 +64,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, setCollapsed }) 
         { key: 'mail-stat', icon: <BarChartOutlined />, label: 'Thống kê email' },
       ]
     },
-    { type: 'divider' },
-    { 
-      key: 'logout', 
-      icon: <LogoutOutlined className="text-red-500" />, 
-      label: 'Đăng xuất',
-      onClick: handleLogout 
-    }
   ];
 
   return (
@@ -125,7 +104,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, setCollapsed }) 
       </div>
       <Menu
         mode="inline"
-        defaultSelectedKeys={[window.location.pathname]}
+        selectedKeys={[location.pathname]}
         items={menuItems}
         className="admin-sidebar-menu h-[calc(100vh-64px)] overflow-y-auto border-none"
       />

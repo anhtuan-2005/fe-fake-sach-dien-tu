@@ -7,6 +7,7 @@ import LearningPyramid from './components/home/LearningPyramid';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminLayout from './pages/admin/AdminLayout';
 import ActivityLogs from './pages/admin/ActivityLogs';
+import AdminProfile from './pages/admin/profile/AdminProfile';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import './App.css';
 
@@ -60,6 +61,7 @@ const App: React.FC = () => {
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<AdminDashboard />} />
           <Route path="logs" element={<ActivityLogs />} />
+          <Route path="profile" element={<AdminProfile />} />
         </Route>
 
         <Route element={<ClientLayout />}>

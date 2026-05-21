@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Modal, Form, Input, Select, App } from 'antd';
+import { Modal, Form, Input, Select, Row, Col, App } from 'antd';
 import { User } from '../../../types';
 import api from '../../../api';
 
@@ -17,10 +17,12 @@ const UserModal: React.FC<UserModalProps> = ({ open, onCancel, onSuccess, editin
   useEffect(() => {
     if (open) {
       if (editingUser) {
+        const role = editingUser.account_type === 'Admin' ? 'ADMIN' : 
+                     editingUser.account_type === 'Giáo viên' ? 'TEACHER' : 'STUDENT';
+        
         form.setFieldsValue({
           ...editingUser,
-          role: editingUser.account_type === 'Admin' ? 'ADMIN' : 
-                editingUser.account_type === 'Giáo viên' ? 'TEACHER' : 'STUDENT'
+          role: role
         });
       } else {
         form.resetFields();
@@ -32,7 +34,6 @@ const UserModal: React.FC<UserModalProps> = ({ open, onCancel, onSuccess, editin
     try {
       const values = await form.validateFields();
       
-      // Map role back to DB strings
       const payload = {
         ...values,
         account_type: values.role === 'ADMIN' ? 'Admin' : 
@@ -50,92 +51,121 @@ const UserModal: React.FC<UserModalProps> = ({ open, onCancel, onSuccess, editin
       onSuccess();
     } catch (error: any) {
       console.error('Submit error:', error);
-      message.error(error.response?.data?.message || 'Có lỗi xảy ra');
+      if (error.response) {
+        message.error(error.response.data?.message || 'Có lỗi xảy ra khi lưu dữ liệu');
+      }
     }
   };
 
   return (
     <Modal
-      title={editingUser ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới'}
+      title={
+        <div className="text-xl font-bold text-gray-800 pb-2 border-b border-gray-100 mr-8">
+          {editingUser ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới'}
+        </div>
+      }
       open={open}
       onCancel={onCancel}
       onOk={handleSubmit}
       okText={editingUser ? 'Cập nhật' : 'Thêm mới'}
       cancelText="Hủy"
-      width={600}
+      width={700}
+      mask={{ closable: false }}
+      destroyOnHidden
+      centered
+      className="responsive-modal"
     >
       <Form
         form={form}
         layout="vertical"
-        className="mt-4"
+        className="mt-6"
         initialValues={{ role: 'STUDENT', level: 'Cấp 1' }}
       >
-        <div className="grid grid-cols-2 gap-4">
-          <Form.Item
-            name="full_name"
-            label="Họ và tên"
-            rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}
-          >
-            <Input placeholder="Nguyễn Văn A" />
-          </Form.Item>
+        <Row gutter={[16, 0]}>
+          <Col xs={24} sm={12}>
+            <Form.Item
+              name="full_name"
+              label={<span className="font-semibold text-gray-700">Họ và tên</span>}
+              rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}
+            >
+              <Input placeholder="Nguyễn Văn A" className="h-10 rounded-lg" />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Form.Item
+              name="user_code"
+              label={<span className="font-semibold text-gray-700">Mã người dùng</span>}
+            >
+              <Input placeholder="Ví dụ: GV01, HS01" className="h-10 rounded-lg" />
+            </Form.Item>
+          </Col>
+        </Row>
 
-          <Form.Item
-            name="user_code"
-            label="Mã người dùng"
-          >
-            <Input placeholder="Ví dụ: GV01, HS01" />
-          </Form.Item>
+        <Row gutter={[16, 0]}>
+          <Col xs={24} sm={12}>
+            <Form.Item
+              name="email"
+              label={<span className="font-semibold text-gray-700">Email</span>}
+              rules={[
+                { required: true, message: 'Vui lòng nhập email' },
+                { type: 'email', message: 'Email không hợp lệ' }
+              ]}
+            >
+              <Input placeholder="example@gmail.com" disabled={!!editingUser} className="h-10 rounded-lg" />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Form.Item
+              name="phone"
+              label={<span className="font-semibold text-gray-700">Số điện thoại</span>}
+              rules={[{ pattern: /^[0-9]{10,11}$/, message: 'Số điện thoại không hợp lệ' }]}
+            >
+              <Input placeholder="0123456789" className="h-10 rounded-lg" />
+            </Form.Item>
+          </Col>
+        </Row>
 
-          <Form.Item
-            name="email"
-            label="Email"
-            rules={[
-              { required: true, message: 'Vui lòng nhập email' },
-              { type: 'email', message: 'Email không hợp lệ' }
-            ]}
-          >
-            <Input placeholder="example@gmail.com" />
-          </Form.Item>
-
-          <Form.Item
-            name="phone"
-            label="Số điện thoại"
-            rules={[{ pattern: /^[0-9]{10,11}$/, message: 'Số điện thoại không hợp lệ' }]}
-          >
-            <Input placeholder="0123456789" />
-          </Form.Item>
-
-          <Form.Item
-            name="role"
-            label="Loại tài khoản"
-            rules={[{ required: true }]}
-          >
-            <Select options={[
-              { value: 'ADMIN', label: 'Admin' },
-              { value: 'TEACHER', label: 'Giáo viên' },
-              { value: 'STUDENT', label: 'Học sinh' }
-            ]} />
-          </Form.Item>
-
-          <Form.Item
-            name="level"
-            label="Cấp học"
-          >
-            <Select options={[
-              { value: 'Cấp 1', label: 'Cấp 1' },
-              { value: 'Cấp 2', label: 'Cấp 2' },
-              { value: 'Cấp 3', label: 'Cấp 3' }
-            ]} />
-          </Form.Item>
-        </div>
+        <Row gutter={[16, 0]}>
+          <Col xs={24} sm={12}>
+            <Form.Item
+              name="role"
+              label={<span className="font-semibold text-gray-700">Loại tài khoản</span>}
+              rules={[{ required: true, message: 'Vui lòng chọn loại tài khoản' }]}
+            >
+              <Select
+                className="h-10 rounded-lg"
+                options={[
+                  { value: 'ADMIN', label: 'Admin' },
+                  { value: 'TEACHER', label: 'Giáo viên' },
+                  { value: 'STUDENT', label: 'Học sinh' }
+                ]}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Form.Item
+              name="level"
+              label={<span className="font-semibold text-gray-700">Cấp học</span>}
+            >
+              <Select
+                className="h-10 rounded-lg"
+                options={[
+                  { value: 'Cấp 1', label: 'Cấp 1' },
+                  { value: 'Cấp 2', label: 'Cấp 2' },
+                  { value: 'Cấp 3', label: 'Cấp 3' }
+                ]}
+              />
+            </Form.Item>
+          </Col>
+        </Row>
         
         {!editingUser && (
           <Form.Item
             name="password"
-            label="Mật khẩu"
+            label={<span className="font-semibold text-gray-700">Mật khẩu khởi tạo</span>}
             rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }]}
           >
-            <Input.Password placeholder="Nhập mật khẩu khởi tạo" />
+            <Input.Password placeholder="Nhập mật khẩu" className="h-10 rounded-lg" />
           </Form.Item>
         )}
       </Form>
