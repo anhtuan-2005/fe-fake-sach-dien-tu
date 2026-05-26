@@ -5,6 +5,9 @@ import Hero from './components/home/Hero';
 import Features from './components/home/Features';
 import LearningPyramid from './components/home/LearningPyramid';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import ClassManagement from './pages/admin/ClassManagement';
+import ClassDetail from './pages/admin/ClassDetail';
+import AdminStudentClass from './pages/admin/AdminStudentClass';
 import AdminLayout from './pages/admin/AdminLayout';
 import ActivityLogs from './pages/admin/ActivityLogs';
 import AdminProfile from './pages/admin/profile/AdminProfile';
@@ -53,13 +56,17 @@ const App: React.FC = () => {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute allowedRoles={['admin']}>
+            <ProtectedRoute allowedRoles={['admin', 'teacher', 'student']}>
               <AdminLayout />
             </ProtectedRoute>
           }
         >
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<AdminDashboard />} />
+          <Route path="classes" element={<ClassManagement />} />
+          <Route path="classes/:id" element={<ClassDetail />} />
+          <Route path="student-classes" element={<AdminStudentClass />} />
+          <Route path="student-classes/:id" element={<ClassDetail isReadOnly={true} />} />
           <Route path="logs" element={<ActivityLogs />} />
           <Route path="profile" element={<AdminProfile />} />
         </Route>

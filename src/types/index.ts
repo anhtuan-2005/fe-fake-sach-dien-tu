@@ -35,6 +35,21 @@ export interface Book {
   created_at: string;
 }
 
+export interface Classroom {
+  id: number;
+  class_code: string;
+  class_name: string;
+  description: string | null;
+  status: number;
+  completion_status: number; // 0: Đang học, 1: Hoàn thành
+  teacher_id?: number | null;
+  teacher_name?: string | null;
+  teacher_email?: string | null;
+  teacher_phone?: string | null;
+  student_count: number; // Đếm động từ API
+  created_at: string;
+}
+
 /**
  * Interface cho Danh mục
  */
@@ -117,6 +132,12 @@ export interface UserFilterState {
   school?: string;
   phone?: string;
   email?: string;
+}
+
+export interface ClassFilterState {
+  status: string;
+  searchType: string;
+  keyword: string;
 }
 
 /**

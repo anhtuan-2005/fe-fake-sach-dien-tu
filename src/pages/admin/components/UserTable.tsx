@@ -1,16 +1,19 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Table, Button, Space, Tooltip, Popconfirm, App, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { EditOutlined, DeleteOutlined, UserAddOutlined, ReloadOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, UserAddOutlined, ReloadOutlined, HistoryOutlined, UploadOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import api from '../../../api';
 import { User, UserFilterState, ApiResponse } from '../../../types';
 import UserFilter from './UserFilter';
 import UserModal from './UserModal';
+import UserTrashModal from './UserTrashModal';
 
 const { Title } = Typography;
 
 const UserTable: React.FC = () => {
   const { message } = App.useApp();
+  const navigate = useNavigate();
   
   // States
   const [users, setUsers] = useState<User[]>([]);
@@ -29,6 +32,7 @@ const UserTable: React.FC = () => {
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isTrashModalOpen, setIsTrashModalOpen] = useState<boolean>(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
 
   // Fetch users from API
@@ -216,12 +220,35 @@ const UserTable: React.FC = () => {
         </div>
         <Space size="small" className="w-full sm:w-auto flex-wrap">
           <Button 
+            type="default" 
+            icon={<HistoryOutlined />} 
+            className="flex-1 sm:flex-none h-10 rounded-lg font-medium text-xs sm:text-sm text-gray-500 border-gray-200"
+            onClick={() => navigate('/admin/logs')}
+          >
+            Lịch sử thao tác
+          </Button>
+          <Button 
+            icon={<UploadOutlined />} 
+            className="flex-1 sm:flex-none h-10 rounded-lg font-medium text-xs sm:text-sm text-gray-600 border-gray-300"
+          >
+            Nhập từ excel
+          </Button>
+          <Button 
             icon={<ReloadOutlined />} 
             onClick={() => fetchUsers(page, filters)}
             loading={loading}
             className="flex-1 sm:flex-none h-10 rounded-lg font-medium text-xs sm:text-sm"
           >
             Làm mới
+          </Button>
+          <Button 
+            type="default"
+            danger
+            icon={<DeleteOutlined />} 
+            onClick={() => setIsTrashModalOpen(true)}
+            className="flex-1 sm:flex-none h-10 rounded-lg font-medium text-xs sm:text-sm"
+          >
+            Thùng rác
           </Button>
           <Button 
             type="primary" 
@@ -268,6 +295,13 @@ const UserTable: React.FC = () => {
         onCancel={() => setIsModalOpen(false)}
         onSuccess={handleModalSuccess}
         editingUser={editingUser}
+      />
+
+      {/* Trash Modal */}
+      <UserTrashModal
+        open={isTrashModalOpen}
+        onCancel={() => setIsTrashModalOpen(false)}
+        onSuccess={() => fetchUsers(page, filters)}
       />
     </div>
   );

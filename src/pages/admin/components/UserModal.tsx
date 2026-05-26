@@ -26,9 +26,21 @@ const UserModal: React.FC<UserModalProps> = ({ open, onCancel, onSuccess, editin
         });
       } else {
         form.resetFields();
+        // Tự động sinh mã người dùng mặc định cho Học sinh (role mặc định)
+        const randomStr = Math.floor(1000 + Math.random() * 9000);
+        form.setFieldsValue({ user_code: `HS${randomStr}` });
       }
     }
   }, [open, editingUser, form]);
+
+  const handleValuesChange = (changedValues: any) => {
+    if (changedValues.role && !editingUser) {
+      const prefix = changedValues.role === 'ADMIN' ? 'AD' : 
+                     changedValues.role === 'TEACHER' ? 'GV' : 'HS';
+      const randomStr = Math.floor(1000 + Math.random() * 9000);
+      form.setFieldsValue({ user_code: `${prefix}${randomStr}` });
+    }
+  };
 
   const handleSubmit = async () => {
     try {
@@ -80,6 +92,7 @@ const UserModal: React.FC<UserModalProps> = ({ open, onCancel, onSuccess, editin
         layout="vertical"
         className="mt-6"
         initialValues={{ role: 'STUDENT', level: 'Cấp 1' }}
+        onValuesChange={handleValuesChange}
       >
         <Row gutter={[16, 0]}>
           <Col xs={24} sm={12}>
@@ -94,9 +107,9 @@ const UserModal: React.FC<UserModalProps> = ({ open, onCancel, onSuccess, editin
           <Col xs={24} sm={12}>
             <Form.Item
               name="user_code"
-              label={<span className="font-semibold text-gray-700">Mã người dùng</span>}
+              label={<span className="font-semibold text-gray-700">Mã người dùng (Tự động)</span>}
             >
-              <Input placeholder="Ví dụ: GV01, HS01" className="h-10 rounded-lg" />
+              <Input placeholder="Hệ thống tự sinh" className="h-10 rounded-lg bg-gray-50" readOnly />
             </Form.Item>
           </Col>
         </Row>

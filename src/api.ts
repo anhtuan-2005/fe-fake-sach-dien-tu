@@ -45,8 +45,13 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // Kiểm tra lỗi 401 và mã lỗi TOKEN_EXPIRED từ Backend
+    const isTokenExpired = error.response && 
+                          error.response.status === 401 && 
+                          error.response.data?.message === 'TOKEN_EXPIRED';
+
     // Nếu lỗi 401 (Hết hạn Access Token) và chưa từng thử retry
-    if (error.response && error.response.status === 401 && !originalRequest._retry) {
+    if (isTokenExpired && !originalRequest._retry) {
       if (isRefreshing) {
         // Nếu đang refresh rồi thì đẩy request vào hàng đợi
         return new Promise((resolve, reject) => {
