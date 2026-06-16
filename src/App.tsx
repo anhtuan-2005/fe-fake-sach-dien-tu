@@ -108,6 +108,7 @@ const App: React.FC = () => {
           <Route path="classes" element={<TeacherClasses />} />
           <Route path="classes/:id" element={<TeacherClassDetail />} />
           <Route path="question-bank" element={<TeacherQuestionBank />} />
+          <Route path="type-configs" element={<TypeConfigIndex />} />
           <Route path="profile" element={<TeacherProfile />} />
         </Route>
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Layout, Menu, Typography, Button, App } from 'antd';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { FolderOpenOutlined, DatabaseOutlined, LogoutOutlined, HomeOutlined, MenuFoldOutlined, MenuUnfoldOutlined, UserOutlined } from '@ant-design/icons';
+import { FolderOpenOutlined, DatabaseOutlined, LogoutOutlined, HomeOutlined, MenuFoldOutlined, MenuUnfoldOutlined, UserOutlined, SettingOutlined } from '@ant-design/icons';
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../api';
 import { User, ApiResponse } from '../../types';
@@ -69,6 +69,12 @@ export const TeacherLayout: React.FC = () => {
       icon: <DatabaseOutlined />, 
       label: 'Ngân hàng câu hỏi', 
       onClick: () => navigate('/teacher/question-bank') 
+    },
+    { 
+      key: '/teacher/type-configs', 
+      icon: <SettingOutlined />, 
+      label: 'Type & OptionType', 
+      onClick: () => navigate('/teacher/type-configs') 
     }
   ];
 
