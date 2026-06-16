@@ -14,6 +14,26 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onUpdateSuccess }) => {
   const { message } = App.useApp();
   const [loading, setLoading] = React.useState(false);
 
+  const isAdmin = user?.role === 'admin';
+  const isTeacher = user?.role === 'teacher';
+
+  const levelOptions = isAdmin 
+    ? [
+        { value: 'N/A', label: 'N/A' },
+        { value: 'Cấp 1', label: 'Cấp 1' },
+        { value: 'Cấp 2', label: 'Cấp 2' },
+        { value: 'Cấp 3', label: 'Cấp 3' },
+      ]
+    : [
+        { value: 'Sở Giáo dục', label: 'Sở Giáo dục' },
+        { value: 'Phòng Giáo dục', label: 'Phòng Giáo dục' },
+        { value: 'Trường học', label: 'Trường học' },
+      ];
+
+  if (user?.level && !levelOptions.some(opt => opt.value === user.level)) {
+    levelOptions.unshift({ value: user.level, label: user.level });
+  }
+
   useEffect(() => {
     if (user) {
       form.setFieldsValue({
@@ -116,9 +136,20 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onUpdateSuccess }) => {
           <Col xs={24} sm={12}>
             <Form.Item
               name="level"
-              label="Cấp bậc / Đơn vị"
+              label={isTeacher ? "Tổ bộ môn" : "Cấp bậc / Đơn vị"}
             >
-              <Input prefix={<BankOutlined className="text-gray-400" />} placeholder="Ví dụ: Sở Giáo dục" />
+              <Select 
+                placeholder={isTeacher ? "Chưa phân công" : "Chọn cấp bậc / đơn vị"} 
+                className="h-10 rounded-lg"
+                allowClear={!isTeacher}
+                disabled={isTeacher}
+              >
+                {levelOptions.map(opt => (
+                  <Select.Option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </Select.Option>
+                ))}
+              </Select>
             </Form.Item>
           </Col>
         </Row>

@@ -57,8 +57,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, setCollapsed }) 
         { key: 'library', icon: <BankOutlined />, label: 'Thư viện' },
         { key: '/admin/classes', icon: <FolderOpenOutlined />, label: 'Quản lý lớp học', onClick: () => navigate('/admin/classes') },
         { key: '/admin/users', icon: <TeamOutlined />, label: 'Quản lý người dùng', onClick: () => navigate('/admin/users') },
-        { key: 'q-bank', icon: <DatabaseOutlined />, label: 'Ngân hàng câu hỏi' },
-        { key: 'type-opt', icon: <SettingOutlined />, label: 'Type & OptionType' },
+        { key: '/admin/question-bank', icon: <DatabaseOutlined />, label: 'Ngân hàng câu hỏi', onClick: () => navigate('/admin/question-bank') },
+        { key: '/admin/type-configs', icon: <SettingOutlined />, label: 'Type & OptionType', onClick: () => navigate('/admin/type-configs') },
         { key: 'mail-tmpl', icon: <MailOutlined />, label: 'Quản lý mẫu mail' },
         { key: 'mail-stat', icon: <BarChartOutlined />, label: 'Thống kê email' },
       ]

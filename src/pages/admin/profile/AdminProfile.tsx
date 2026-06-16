@@ -67,7 +67,7 @@ const AdminProfile: React.FC = () => {
             {/* Thống kê nhanh hoặc thông tin thêm (Tùy chọn) */}
             <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-6 rounded-2xl shadow-lg text-white">
               <Title level={5} className="!text-white !mb-4">Trạng thái tài khoản</Title>
-              <Space orientation="vertical" className="w-full">
+              <Space direction="vertical" className="w-full">
                 <div className="flex justify-between items-center pb-3 border-b border-blue-500/30">
                   <Text className="!text-blue-100">Ngày tham gia</Text>
                   <Text className="!text-white font-medium">

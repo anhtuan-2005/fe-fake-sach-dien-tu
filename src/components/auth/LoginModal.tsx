@@ -43,8 +43,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ visible, onCancel }) => {
           
           // Điều hướng thông minh theo role sử dụng Optional Chaining để phòng thủ
           setTimeout(() => {
-            if (user.role === 'admin') {
-              navigate('/admin', { replace: true });
+            const userRole = user.role?.toLowerCase() || '';
+            if (userRole === 'admin') {
+              navigate('/admin/dashboard', { replace: true });
+            } else if (userRole === 'teacher') {
+              navigate('/teacher/dashboard', { replace: true });
+            } else if (userRole === 'student') {
+              navigate('/student/home', { replace: true });
             } else {
               navigate('/', { replace: true });
             }

@@ -169,16 +169,14 @@ const UserTable: React.FC = () => {
         
         return (
           <Space size="middle">
-            {!isAdmin && (
-              <Tooltip title="Chỉnh sửa">
-                <Button 
-                  type="text" 
-                  icon={<EditOutlined className="text-blue-500 text-lg" />} 
-                  onClick={() => handleOpenEditModal(record)}
-                  className="hover:bg-blue-50 rounded-full"
-                />
-              </Tooltip>
-            )}
+            <Tooltip title="Chỉnh sửa">
+              <Button 
+                type="text" 
+                icon={<EditOutlined className="text-blue-500 text-lg" />} 
+                onClick={() => handleOpenEditModal(record)}
+                className="hover:bg-blue-50 rounded-full"
+              />
+            </Tooltip>
             
             {!isAdminTốiCao && !isAdmin && (
               <Popconfirm

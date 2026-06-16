@@ -1,12 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { Layout } from 'antd';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import AdminSidebar from './components/AdminSidebar';
 import AdminHeader from './components/AdminHeader';
+import useAuthStore from '../../store/useAuthStore';
+import api from '../../api';
+import { User, ApiResponse } from '../../types';
 
 const AdminLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth < 768);
+  const location = useLocation();
+  const { token, setAuth } = useAuthStore();
+
+  // Hàm lấy thông tin hồ sơ mới nhất (Live Data) cho Admin
+  const fetchLatestProfile = async () => {
+    if (!token) return;
+    try {
+      const response = await api.get<ApiResponse<User>>('/auth/me');
+      if (response.data.success && response.data.data) {
+        setAuth(response.data.data, token);
+      }
+    } catch (error) {
+      console.error('Failed to fetch latest admin profile:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchLatestProfile();
+  }, [location.pathname]);
 
   // Theo dõi kích thước màn hình để tự động thu gọn sidebar
   useEffect(() => {

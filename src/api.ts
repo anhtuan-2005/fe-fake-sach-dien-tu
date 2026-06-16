@@ -50,6 +50,17 @@ api.interceptors.response.use(
                           error.response.status === 401 && 
                           error.response.data?.message === 'TOKEN_EXPIRED';
 
+    // Nếu lỗi 401 nhưng KHÔNG PHẢI do hết hạn (ví dụ: mất token, token không hợp lệ)
+    // Hoặc nếu lỗi 401 mà request này đã là request retry hoặc request refresh token
+    if (error.response && error.response.status === 401 && !isTokenExpired) {
+      console.error('Lỗi xác thực (401): Token không tồn tại hoặc không hợp lệ.');
+      useAuthStore.getState().logout();
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+      }
+      return Promise.reject(error);
+    }
+
     // Nếu lỗi 401 (Hết hạn Access Token) và chưa từng thử retry
     if (isTokenExpired && !originalRequest._retry) {
       if (isRefreshing) {

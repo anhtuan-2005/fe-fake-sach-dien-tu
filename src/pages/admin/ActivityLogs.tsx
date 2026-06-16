@@ -226,7 +226,7 @@ const ActivityLogs: React.FC = () => {
   return (
     <div className="p-6">
       <Card className="mb-6 shadow-sm border-none">
-        <Space orientation="vertical" size="large" className="w-full">
+        <Space direction="vertical" size="large" className="w-full">
           <div className="flex items-center gap-3">
             <Tooltip title="Quay lại Quản lý người dùng">
               <Button 

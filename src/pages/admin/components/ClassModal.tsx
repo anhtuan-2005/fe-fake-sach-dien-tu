@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Modal, Form, Input, InputNumber, Select, App } from 'antd';
 import { Classroom } from '../../../types';
 import api from '../../../api';
+import useAuthStore from '../../../store/useAuthStore';
 
 interface ClassModalProps {
   open: boolean;
@@ -15,6 +16,8 @@ const ClassModal: React.FC<ClassModalProps> = ({ open, onCancel, onSuccess, edit
   const { message } = App.useApp();
   const [loading, setLoading] = React.useState(false);
   const [teachers, setTeachers] = React.useState<any[]>([]);
+  const user = useAuthStore(state => state.user);
+  const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
     const fetchTeachers = async () => {
@@ -28,7 +31,9 @@ const ClassModal: React.FC<ClassModalProps> = ({ open, onCancel, onSuccess, edit
       }
     };
     if (open) {
-      fetchTeachers();
+      if (isAdmin) {
+        fetchTeachers();
+      }
       if (editingClass) {
         form.setFieldsValue(editingClass);
       } else {
@@ -40,7 +45,7 @@ const ClassModal: React.FC<ClassModalProps> = ({ open, onCancel, onSuccess, edit
         });
       }
     }
-  }, [open, editingClass, form]);
+  }, [open, editingClass, form, isAdmin]);
 
   const handleSubmit = async () => {
     try {
@@ -93,22 +98,24 @@ const ClassModal: React.FC<ClassModalProps> = ({ open, onCancel, onSuccess, edit
           <Input placeholder="VD: Lớp 12A1" className="h-10 rounded-lg" />
         </Form.Item>
 
-        <Form.Item
-          name="teacher_id"
-          label="Giáo viên chủ nhiệm"
-        >
-          <Select 
-            placeholder="Chọn giáo viên" 
-            className="h-10 rounded-lg"
-            showSearch
-            optionFilterProp="children"
-            allowClear
+        {isAdmin && (
+          <Form.Item
+            name="teacher_id"
+            label="Giáo viên chủ nhiệm"
           >
-            {teachers.map(t => (
-              <Select.Option key={t.id} value={t.id}>{t.full_name} ({t.user_code})</Select.Option>
-            ))}
-          </Select>
-        </Form.Item>
+            <Select 
+              placeholder="Chọn giáo viên" 
+              className="h-10 rounded-lg"
+              showSearch
+              optionFilterProp="children"
+              allowClear
+            >
+              {teachers.map(t => (
+                <Select.Option key={t.id} value={t.id}>{t.full_name} ({t.user_code})</Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+        )}
 
         <Form.Item
           name="status"
