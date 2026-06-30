@@ -15,7 +15,9 @@ import {
   Spin,
   Row,
   Col,
-  Space
+  Space,
+  Table,
+  Popconfirm
 } from 'antd';
 import { 
   ArrowLeftOutlined, 
@@ -35,6 +37,7 @@ import api from '../../api';
 import { Classroom, ApiResponse } from '../../types';
 import StudentTab from './components/StudentTab';
 import ClassModal from './components/ClassModal';
+import CreateAssignmentDrawer from './components/CreateAssignmentDrawer';
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
@@ -52,6 +55,12 @@ const ClassDetail: React.FC<ClassDetailProps> = ({ isReadOnly = false }) => {
   const [classroom, setClassroom] = useState<Classroom | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
 
+  // States cho bài tập
+  const [assignments, setAssignments] = useState<any[]>([]);
+  const [assignmentsLoading, setAssignmentsLoading] = useState<boolean>(false);
+  const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState<boolean>(false);
+  const [editingAssignmentId, setEditingAssignmentId] = useState<number | null>(null);
+
   const fetchClassDetail = useCallback(async () => {
     setLoading(true);
     try {
@@ -66,9 +75,24 @@ const ClassDetail: React.FC<ClassDetailProps> = ({ isReadOnly = false }) => {
     }
   }, [id, message]);
 
+  const fetchAssignments = useCallback(async () => {
+    setAssignmentsLoading(true);
+    try {
+      const response = await api.get<ApiResponse<any[]>>(`/admin/classes/${id}/assignments`);
+      if (response.data.success) {
+        setAssignments(response.data.data || []);
+      }
+    } catch (error: any) {
+      message.error(error.response?.data?.message || 'Không thể tải danh sách bài tập');
+    } finally {
+      setAssignmentsLoading(false);
+    }
+  }, [id, message]);
+
   useEffect(() => {
     fetchClassDetail();
-  }, [fetchClassDetail]);
+    fetchAssignments();
+  }, [fetchClassDetail, fetchAssignments]);
 
   const handleEditSuccess = () => {
     setIsEditModalOpen(false);
@@ -128,12 +152,121 @@ const ClassDetail: React.FC<ClassDetailProps> = ({ isReadOnly = false }) => {
       children: (
         <Card>
           <div className="flex justify-between items-center mb-4">
-            <Title level={5}>Danh sách bài tập</Title>
-            {!isReadOnly && <Button type="primary">Tạo bài tập</Button>}
+            <Title level={5} style={{ margin: 0 }}>Danh sách bài tập</Title>
+            {!isReadOnly && (
+              <Button 
+                type="primary" 
+                icon={<PlusOutlined />}
+                onClick={() => setIsCreateDrawerOpen(true)}
+              >
+                Tạo bài tập
+              </Button>
+            )}
           </div>
-          <div className="text-center py-12 text-gray-400">
-            Tính năng đang được phát triển
-          </div>
+          <Table
+            dataSource={assignments}
+            loading={assignmentsLoading}
+            rowKey="id"
+            bordered
+            columns={[
+              {
+                title: 'Tiêu đề bài tập',
+                dataIndex: 'title',
+                key: 'title',
+                render: (text: string, record: any) => (
+                  <Space>
+                    <div 
+                      style={{ 
+                        backgroundColor: record.color || '#3b82f6', 
+                        width: '12px', 
+                        height: '12px', 
+                        borderRadius: '50%' 
+                      }} 
+                    />
+                    <Text strong>{text}</Text>
+                  </Space>
+                )
+              },
+              {
+                title: 'Loại bài tập',
+                dataIndex: 'exercise_type_name',
+                key: 'exercise_type_name',
+                render: (text: string) => <Tag color="blue">{text || 'Bài tập chung'}</Tag>
+              },
+              {
+                title: 'Điểm tối đa',
+                dataIndex: 'max_score',
+                key: 'max_score',
+                width: 120,
+                align: 'center'
+              },
+              {
+                title: 'Giao cho học sinh (Đã nộp)',
+                key: 'assigned',
+                width: 180,
+                align: 'center',
+                render: (_: any, record: any) => {
+                  const submitted = record.submitted_count || 0;
+                  const assigned = record.assigned_count || 0;
+                  return (
+                    <span>{submitted}/{assigned}</span>
+                  );
+                }
+              },
+              {
+                title: 'Ngày tạo',
+                dataIndex: 'created_at',
+                key: 'created_at',
+                width: 180,
+                render: (date: string) => date ? new Date(date).toLocaleString('vi-VN') : '-'
+              },
+              {
+                title: 'Hạn nộp',
+                dataIndex: 'due_date',
+                key: 'due_date',
+                width: 180,
+                render: (date: string) => date ? new Date(date).toLocaleString('vi-VN') : '-'
+              },
+              ...(!isReadOnly ? [{
+                title: 'Thao tác',
+                key: 'action',
+                width: 120,
+                align: 'center' as const,
+                render: (_: any, record: any) => (
+                  <Space>
+                    <Button 
+                      type="primary" 
+                      shape="circle" 
+                      icon={<EditOutlined />} 
+                      onClick={() => {
+                        setEditingAssignmentId(record.id);
+                        setIsCreateDrawerOpen(true);
+                      }}
+                    />
+                    <Popconfirm
+                      title="Bạn có chắc chắn muốn xóa bài tập này?"
+                      onConfirm={async () => {
+                        try {
+                          const response = await api.delete(`/admin/assignments/${record.id}`);
+                          if (response.data.success) {
+                            message.success('Xóa bài tập thành công');
+                            fetchAssignments();
+                          }
+                        } catch (error: any) {
+                          message.error(error.response?.data?.message || 'Không thể xóa bài tập');
+                        }
+                      }}
+                      okText="Xóa"
+                      cancelText="Hủy"
+                      okButtonProps={{ danger: true }}
+                    >
+                      <Button type="primary" danger shape="circle" icon={<DeleteOutlined />} />
+                    </Popconfirm>
+                  </Space>
+                )
+              }] : [])
+            ]}
+          />
         </Card>
       ),
     },
@@ -310,6 +443,19 @@ const ClassDetail: React.FC<ClassDetailProps> = ({ isReadOnly = false }) => {
           onCancel={() => setIsEditModalOpen(false)}
           onSuccess={handleEditSuccess}
           editingClass={classroom}
+        />
+      )}
+
+      {isCreateDrawerOpen && (
+        <CreateAssignmentDrawer
+          open={isCreateDrawerOpen}
+          onClose={() => {
+            setIsCreateDrawerOpen(false);
+            setEditingAssignmentId(null);
+          }}
+          classId={id!}
+          onSuccess={fetchAssignments}
+          editingAssignmentId={editingAssignmentId}
         />
       )}
     </Content>

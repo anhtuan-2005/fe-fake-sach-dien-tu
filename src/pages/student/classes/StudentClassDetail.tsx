@@ -19,7 +19,8 @@ import {
   Space,
   Timeline,
   Spin,
-  App
+  App,
+  Input
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -42,7 +43,7 @@ const { Title, Text, Paragraph } = Typography;
 
 // Interfaces cho bài tập mẫu
 interface Assignment {
-  id: string;
+  id: string | number;
   title: string;
   dueDate: string;
   status: 'done' | 'pending' | 'late';
@@ -51,6 +52,7 @@ interface Assignment {
   questions?: {
     id: number;
     text: string;
+    questionType?: string;
     options: string[];
     correctIndex: number;
   }[];
@@ -68,8 +70,32 @@ export const StudentClassDetail: React.FC = () => {
   // States cho Modal làm bài tập
   const [isTestModalOpen, setIsTestModalOpen] = useState<boolean>(false);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
-  const [userAnswers, setUserAnswers] = useState<{ [key: number]: number }>({});
-  const [testResult, setTestResult] = useState<{ score: number; correctCount: number; showResult: boolean } | null>(null);
+  const [userAnswers, setUserAnswers] = useState<{ [key: number]: any }>({});
+  const [testResult, setTestResult] = useState<{ 
+    score: number; 
+    correctCount: number; 
+    showResult: boolean;
+    evaluation?: { [key: number]: { isCorrect: boolean; correctAnswer: string } };
+  } | null>(null);
+
+  // Dữ liệu bài tập về nhà của lớp (lấy động từ API)
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [assignmentsLoading, setAssignmentsLoading] = useState<boolean>(false);
+
+  const fetchAssignments = useCallback(async () => {
+    setAssignmentsLoading(true);
+    try {
+      const response = await api.get<ApiResponse<Assignment[]>>(`/admin/student/classes/${id}/assignments`);
+      if (response.data && response.data.success) {
+        setAssignments(response.data.data || []);
+      }
+    } catch (error: any) {
+      console.error('Lỗi khi tải bài tập:', error);
+      message.error(error.response?.data?.message || 'Không thể tải danh sách bài tập.');
+    } finally {
+      setAssignmentsLoading(false);
+    }
+  }, [id, message]);
 
   // Gọi API lấy chi tiết lớp học
   const fetchClassDetails = useCallback(async () => {
@@ -96,7 +122,8 @@ export const StudentClassDetail: React.FC = () => {
 
   useEffect(() => {
     fetchClassDetails();
-  }, [fetchClassDetails]);
+    fetchAssignments();
+  }, [fetchClassDetails, fetchAssignments]);
 
   // Mock dữ liệu sách giáo khoa cho lớp
   const mockBooks = [
@@ -125,85 +152,6 @@ export const StudentClassDetail: React.FC = () => {
       grade: 'Đọc thêm'
     }
   ];
-
-  // Mock dữ liệu bài tập về nhà của lớp
-  const [assignments, setAssignments] = useState<Assignment[]>([
-    {
-      id: 'BT-001',
-      title: 'Unit 7: Practice Vocabulary & Reading Comprehension',
-      dueDate: '2026-06-10',
-      status: 'pending',
-      maxScore: 10,
-      questions: [
-        {
-          id: 1,
-          text: 'Where is the capital city of England?',
-          options: ['London', 'Paris', 'New York', 'Tokyo'],
-          correctIndex: 0
-        },
-        {
-          id: 2,
-          text: 'Fill in the blank: "She ________ to school every day."',
-          options: ['go', 'goes', 'going', 'went'],
-          correctIndex: 1
-        },
-        {
-          id: 3,
-          text: 'Find the synonym of "happy":',
-          options: ['sad', 'angry', 'glad', 'tired'],
-          correctIndex: 2
-        },
-        {
-          id: 4,
-          text: 'Choose the correct spelling:',
-          options: ['Beautiful', 'Beatiful', 'Beautifull', 'Beautifil'],
-          correctIndex: 0
-        }
-      ]
-    },
-    {
-      id: 'BT-002',
-      title: 'Unit 8: Grammar Quiz - Present Continuous Tense',
-      dueDate: '2026-06-15',
-      status: 'pending',
-      maxScore: 10,
-      questions: [
-        {
-          id: 1,
-          text: 'What are you doing? - I ________ a book right now.',
-          options: ['am reading', 'read', 'reads', 'reading'],
-          correctIndex: 0
-        },
-        {
-          id: 2,
-          text: 'Look! The kids ________ football in the yard.',
-          options: ['is playing', 'are playing', 'play', 'played'],
-          correctIndex: 1
-        },
-        {
-          id: 3,
-          text: 'Choose the correct negative sentence:',
-          options: ['They is not crying.', 'They not crying.', 'They are not crying.', 'They don\'t crying.'],
-          correctIndex: 2
-        }
-      ]
-    },
-    {
-      id: 'BT-003',
-      title: 'Unit 6: Revision Test - Past Simple Tense',
-      dueDate: '2026-05-30',
-      status: 'done',
-      score: 9.0,
-      maxScore: 10
-    },
-    {
-      id: 'BT-004',
-      title: 'Unit 5: Speaking Homework - Introduce your family',
-      dueDate: '2026-05-20',
-      status: 'late',
-      maxScore: 10
-    }
-  ]);
 
   // Mock Bảng tin thông báo
   const mockAnnouncements = [
@@ -239,38 +187,30 @@ export const StudentClassDetail: React.FC = () => {
   };
 
   // Nộp bài tập
-  const handleSubmitTest = () => {
+  const handleSubmitTest = async () => {
     if (!selectedAssignment || !selectedAssignment.questions) return;
 
-    // Đếm số câu trả lời đúng
-    let correctCount = 0;
-    selectedAssignment.questions.forEach((q) => {
-      if (userAnswers[q.id] === q.correctIndex) {
-        correctCount++;
+    try {
+      const response = await api.post(`/admin/student/assignments/${selectedAssignment.id}/submit`, {
+        answers: userAnswers
+      });
+
+      if (response.data && response.data.success) {
+        const result = response.data.data;
+        setTestResult({
+          score: result.score,
+          correctCount: result.correctCount,
+          showResult: true,
+          evaluation: result.evaluation
+        });
+
+        message.success(`Nộp bài thành công! Bạn đạt ${result.score} / ${selectedAssignment.maxScore || 10} điểm.`);
+        fetchAssignments();
       }
-    });
-
-    const score = parseFloat(((correctCount / selectedAssignment.questions.length) * 10).toFixed(1));
-
-    setTestResult({
-      score,
-      correctCount,
-      showResult: true
-    });
-
-    // Cập nhật trạng thái bài tập ở danh sách
-    setAssignments(prev => prev.map(item => {
-      if (item.id === selectedAssignment.id) {
-        return {
-          ...item,
-          status: 'done',
-          score
-        };
-      }
-      return item;
-    }));
-
-    message.success(`Nộp bài thành công! Bạn đạt ${score} / 10 điểm.`);
+    } catch (error: any) {
+      console.error('Lỗi khi nộp bài:', error);
+      message.error(error.response?.data?.message || 'Nộp bài thất bại. Vui lòng thử lại.');
+    }
   };
 
   if (loading) {
@@ -298,6 +238,9 @@ export const StudentClassDetail: React.FC = () => {
 
   const activeAssignments = assignments.filter(a => a.status === 'pending');
   const completedAssignments = assignments.filter(a => a.status === 'done' || a.status === 'late');
+  const completionPercent = assignments.length > 0
+    ? Math.round((assignments.filter(a => a.status === 'done').length / assignments.length) * 100)
+    : 0;
 
   const tabItems = [
     {
@@ -391,7 +334,7 @@ export const StudentClassDetail: React.FC = () => {
                           title={<span className="font-semibold text-gray-700">{item.title}</span>}
                           description={
                             <span className="text-xs text-gray-400 flex items-center gap-1 mt-1">
-                              <ClockCircleOutlined /> Hạn nộp: {new Date(item.dueDate).toLocaleDateString('vi-VN')}
+                              <ClockCircleOutlined /> Hạn nộp: {item.dueDate ? new Date(item.dueDate).toLocaleString('vi-VN') : 'Không giới hạn'}
                             </span>
                           }
                         />
@@ -420,7 +363,7 @@ export const StudentClassDetail: React.FC = () => {
                         title={<span className="font-semibold text-gray-700">{item.title}</span>}
                         description={
                           <span className="text-xs text-gray-400">
-                            Hạn nộp: {new Date(item.dueDate).toLocaleDateString('vi-VN')}
+                            Hạn nộp: {item.dueDate ? new Date(item.dueDate).toLocaleString('vi-VN') : 'Không giới hạn'}
                           </span>
                         }
                       />
@@ -588,7 +531,7 @@ export const StudentClassDetail: React.FC = () => {
             <span className="text-xs text-indigo-100 font-semibold block mb-1">TIẾN ĐỘ LÀM BÀI</span>
             <Progress
               type="circle"
-              percent={75}
+              percent={completionPercent}
               size={70}
               strokeColor="#10b981"
               trailColor="rgba(255,255,255,0.15)"
@@ -630,26 +573,36 @@ export const StudentClassDetail: React.FC = () => {
                 <Paragraph className="font-bold text-gray-700 mb-3 text-sm">
                   Câu {idx + 1}: {q.text}
                 </Paragraph>
-                <Radio.Group
-                  onChange={(e) => setUserAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
-                  value={userAnswers[q.id]}
-                  className="w-full"
-                >
-                  <Space direction="vertical" className="w-full">
-                    {q.options.map((opt, oIdx) => (
-                      <Radio
-                        key={oIdx}
-                        value={oIdx}
-                        className="p-2 border border-gray-100 rounded-lg w-full bg-white hover:bg-slate-50 transition-colors"
-                      >
-                        <span className="text-gray-600 text-xs font-semibold mr-2">
-                          {String.fromCharCode(65 + oIdx)}.
-                        </span>
-                        <span className="text-gray-700 text-sm font-medium">{opt}</span>
-                      </Radio>
-                    ))}
-                  </Space>
-                </Radio.Group>
+                {q.questionType === 'Multiple choice' || (q.options && q.options.length > 0) ? (
+                  <Radio.Group
+                    onChange={(e) => setUserAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
+                    value={userAnswers[q.id]}
+                    className="w-full"
+                  >
+                    <Space direction="vertical" className="w-full">
+                      {q.options.map((opt, oIdx) => (
+                        <Radio
+                          key={oIdx}
+                          value={oIdx}
+                          className="p-2 border border-gray-100 rounded-lg w-full bg-white hover:bg-slate-50 transition-colors"
+                        >
+                          <span className="text-gray-600 text-xs font-semibold mr-2">
+                            {String.fromCharCode(65 + oIdx)}.
+                          </span>
+                          <span className="text-gray-700 text-sm font-medium">{opt}</span>
+                        </Radio>
+                      ))}
+                    </Space>
+                  </Radio.Group>
+                ) : (
+                  <Input
+                    placeholder="Nhập câu trả lời của bạn tại đây..."
+                    onChange={(e) => setUserAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
+                    value={userAnswers[q.id] || ''}
+                    size="large"
+                    className="rounded-lg"
+                  />
+                )}
               </div>
             ))}
 
@@ -691,7 +644,21 @@ export const StudentClassDetail: React.FC = () => {
             <div className="text-left mb-6 max-h-60 overflow-y-auto px-4">
               <span className="font-bold text-gray-700 text-sm mb-3 block">Chi tiết đáp án:</span>
               {selectedAssignment.questions.map((q, idx) => {
-                const isCorrect = userAnswers[q.id] === q.correctIndex;
+                const questionEval = testResult?.evaluation?.[q.id];
+                const isMultipleChoice = q.questionType === 'Multiple choice' || (q.options && q.options.length > 0);
+                
+                const isCorrect = questionEval 
+                  ? questionEval.isCorrect 
+                  : (isMultipleChoice ? userAnswers[q.id] === q.correctIndex : false);
+                  
+                const correctLabel = questionEval 
+                  ? questionEval.correctAnswer 
+                  : (isMultipleChoice ? q.options[q.correctIndex] : '');
+
+                const studentLabel = isMultipleChoice 
+                  ? (q.options[userAnswers[q.id]] || 'Chưa chọn') 
+                  : (userAnswers[q.id] || 'Chưa điền');
+
                 return (
                   <div key={q.id} className="mb-4 border-b border-gray-50 pb-3 flex items-start gap-3">
                     {isCorrect ? (
@@ -704,11 +671,11 @@ export const StudentClassDetail: React.FC = () => {
                       <div className="text-xs mt-1">
                         <span className="text-gray-400">Bạn đã chọn: </span>
                         <span className={isCorrect ? 'text-emerald-600 font-semibold' : 'text-red-500 font-semibold'}>
-                          {q.options[userAnswers[q.id]] || 'Chưa chọn'}
+                          {studentLabel}
                         </span>
                         {!isCorrect && (
                           <span className="text-emerald-600 block mt-0.5">
-                            Đáp án đúng: <strong>{q.options[q.correctIndex]}</strong>
+                            Đáp án đúng: <strong>{correctLabel}</strong>
                           </span>
                         )}
                       </div>
